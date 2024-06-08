@@ -42,7 +42,7 @@ def test_client_can_create_comment(client_reader,
                                    news,
                                    news_detail_url):
     """
-    Проверка на возможность создания комментария 
+    Проверка на возможность создания комментария
     авторизованным пользователем.
     """
     response = client_reader.post(news_detail_url, data=FORM_DATA)
