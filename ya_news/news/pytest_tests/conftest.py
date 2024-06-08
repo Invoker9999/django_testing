@@ -15,7 +15,6 @@ NEWS = 'Новость'
 TEXT = 'Текст'
 
 
-
 @pytest.fixture(autouse=True)
 def enable_db(db):
     """Доступ к базе данных для всех тестов без маркера 'django_db'."""

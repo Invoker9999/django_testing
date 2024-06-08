@@ -1,10 +1,7 @@
 from http import HTTPStatus
 import pytest
 
-from django.urls import reverse
-
 from pytest_django.asserts import assertRedirects
-
 
 COMMENT_DELETE = pytest.lazy_fixture('comment_delete_url')
 COMMENT_EDIT = pytest.lazy_fixture('comment_edit_url')

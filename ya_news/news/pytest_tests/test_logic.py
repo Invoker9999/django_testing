@@ -1,11 +1,8 @@
 from http import HTTPStatus
 import pytest
 
-from pytest_django.asserts import assertRedirects, assertFormError
-
 from news.forms import BAD_WORDS, WARNING
 from news.models import Comment
-from news.pytest_tests.conftest import TEXT_COMMENT
 
 BAD_WORD_DATA = {'text': 'Текст, {bad_word}, остаток текста'}
 FORM_DATA = {'text': 'Текст комментария'}

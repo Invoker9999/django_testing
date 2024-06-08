@@ -2,8 +2,6 @@ from django.conf import settings
 
 from news.forms import CommentForm
 
-import pytest
-
 
 def test_max_10_news_on_homepage(client, news_home_url, list_news):
     """Количество новостей на главной странице — не более 10."""
