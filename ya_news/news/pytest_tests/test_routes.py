@@ -1,72 +1,61 @@
 from http import HTTPStatus
+import pytest
 
 from django.urls import reverse
-
-import pytest
 
 from pytest_django.asserts import assertRedirects
 
 
-@pytest.mark.django_db
-@pytest.mark.parametrize(
-    'name', ('news:home', 'users:login', 'users:logout', 'users:signup')
+COMMENT_DELETE = pytest.lazy_fixture('comment_delete_url')
+COMMENT_EDIT = pytest.lazy_fixture('comment_edit_url')
+NEWS_DETAIL = pytest.lazy_fixture('news_detail_url')
+NEWS_HOME = pytest.lazy_fixture('news_home_url')
+
+USERS_LOGIN = pytest.lazy_fixture('users_login_url')
+USERS_LOGOUT = pytest.lazy_fixture('users_logout_url')
+USERS_SIGNUP = pytest.lazy_fixture('users_signup_url')
+
+EXPECTED_URL_COMMENT_DELETE = pytest.lazy_fixture(
+    'expected_for_comment_delete_url'
 )
-def test_home_page_access_for_anon(client, name):
-    """
-    Главная страница доступна анонимному пользователю.
-    Страницы регистрации пользователей,
-    входа в учётную запись и выхода из неё доступны анонимным пользователям.
-    """
-    url = reverse(name)
-    response = client.get(url)
-    assert response.status_code == HTTPStatus.OK
+EXPECTED_URL_COMMENT_EDIT = pytest.lazy_fixture(
+    'expected_for_comment_edit_url'
+)
 
-
-@pytest.mark.django_db
-def test_news_page_access_for_anon(client, news):
-    """Страница отдельной новости доступна анонимному пользователю."""
-    url = reverse('news:detail', kwargs={'pk': news.pk})
-    response = client.get(url)
-    assert response.status_code == HTTPStatus.OK
+CLIENT_ANONYMOUS = pytest.lazy_fixture('client')
+CLIENT_AUTHOR = pytest.lazy_fixture('client_author')
+CLIENT_READER = pytest.lazy_fixture('client_reader')
 
 
 @pytest.mark.parametrize(
-    'parametrized_client, expected_status',
+    'url, client_user, status',
     (
-        (pytest.lazy_fixture('admin_client'),  # type: ignore
-         HTTPStatus.NOT_FOUND),
-        (pytest.lazy_fixture('author_client'), HTTPStatus.OK),  # type: ignore
-    ),
+        (NEWS_HOME, CLIENT_ANONYMOUS, HTTPStatus.OK),
+        (USERS_LOGIN, CLIENT_ANONYMOUS, HTTPStatus.OK),
+        (USERS_LOGOUT, CLIENT_ANONYMOUS, HTTPStatus.OK),
+        (USERS_SIGNUP, CLIENT_ANONYMOUS, HTTPStatus.OK),
+        (NEWS_DETAIL, CLIENT_ANONYMOUS, HTTPStatus.OK),
+        (COMMENT_EDIT, CLIENT_AUTHOR, HTTPStatus.OK),
+        (COMMENT_DELETE, CLIENT_AUTHOR, HTTPStatus.OK),
+        (COMMENT_EDIT, CLIENT_READER, HTTPStatus.NOT_FOUND),
+        (COMMENT_DELETE, CLIENT_READER, HTTPStatus.NOT_FOUND),
+    )
 )
-@pytest.mark.parametrize(
-    'name',
-    ('news:edit', 'news:delete'),
-)
-def test_comment_edit_delete_access_for_author(
-    parametrized_client, expected_status, name, comment
-):
-    """
-    Страницы удаления и редактирования комментария доступны автору комментария.
-    Авторизованный пользователь не может зайти на страницы редактирования или
-    удаления чужих комментариев (возвращается ошибка 404).
-    """
-    url = reverse(name, kwargs={'pk': comment.pk})
-    response = parametrized_client.get(url)
-    assert response.status_code == expected_status
+def test_pages_availability_for_users(url, client_user, status):
+    assert client_user.get(url).status_code == status
 
 
-@pytest.mark.django_db
 @pytest.mark.parametrize(
-    'name',
-    ('news:edit', 'news:delete'),
+    'url, client_user, expected_url',
+    (
+        (COMMENT_EDIT, CLIENT_ANONYMOUS, EXPECTED_URL_COMMENT_EDIT),
+        (COMMENT_DELETE, CLIENT_ANONYMOUS, EXPECTED_URL_COMMENT_DELETE),
+    )
 )
-def test_anon_redirect_to_login_on_edit_delete_attempt(client, name, comment):
-    """
-    При попытке перейти на страницу редактирования или удаления комментария
-    анонимный пользователь перенаправляется на страницу авторизации.
-    """
-    login_url = reverse('users:login')
-    url = reverse(name, kwargs={'pk': comment.pk})
-    expected_url = f'{login_url}?next={url}'
-    response = client.get(url)
-    assertRedirects(response, expected_url)
+def test_pages_no_availability_for_anonymous_user(url,
+                                                  client_user,
+                                                  expected_url):
+    assertRedirects(
+        client_user.get(url),
+        expected_url
+    )
