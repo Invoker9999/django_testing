@@ -79,7 +79,7 @@ def test_author_can_delete_own_comment(client_author,
     assert client_author.post(
         comment_delete_url
     ).status_code == HTTPStatus.FOUND
-    assert Comment.objects.count() == comments_before
+    assert Comment.objects.count() == comments_before - 1
 
 
 def test_reader_cant_edit_authors_comment(client_reader,

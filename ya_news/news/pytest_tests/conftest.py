@@ -80,7 +80,7 @@ def author(django_user_model):
 
 
 @pytest.fixture
-def author_client(author):
+def client_author(author):
     """Автор-клиент."""
     client = Client()
     client.force_login(user=author)
