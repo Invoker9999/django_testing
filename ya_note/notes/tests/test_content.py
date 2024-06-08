@@ -1,60 +1,58 @@
-from django.contrib.auth import get_user_model
-from django.test import Client, TestCase
-from django.urls import reverse
-
 from notes.models import Note
+from notes.forms import NoteForm
+from .common import (
+    BaseTestCase,
+    NOTE_SLUG,
+    NOTES_ADD,
+    NOTES_EDIT,
+    NOTES_LIST,
+)
 
-User = get_user_model()
 
-
-class TestContent(TestCase):
-    """Класс TestContent предназначен для тестирования контента"""
-
-    TITLE = 'Заголовок'
-    TEXT = 'Текст'
+class TestListNotes(BaseTestCase):
 
     @classmethod
     def setUpTestData(cls):
-        cls.user = User.objects.create(username='Пользователь')
-        cls.author_user = User.objects.create(username='Автор пользователь')
-        cls.note = Note.objects.create(
-            author=cls.user,
-            title=cls.TITLE,
-            text=cls.TEXT,
+        BaseTestCase.setUpTestData()
+        cls.notes = Note.objects.bulk_create(
+            [
+                Note(
+                    title=f'Заголовок {index}',
+                    text='Просто текст.',
+                    slug=NOTE_SLUG + f'{index}',
+                    author=cls.author,
+                )
+                if index % 2 == 1 else
+                Note(
+                    title=f'Заголовок {index}',
+                    text='Просто текст.',
+                    slug=NOTE_SLUG + f'{index}',
+                    author=cls.reader,
+                )
+                for index in range(4)
+            ]
         )
 
-    def setUp(self):
-        self.user_client = Client()
-        self.user_client.force_login(self.user)
-        self.author_user_client = Client()
-        self.author_user_client.force_login(self.author_user)
+    def test_notes_one_author(self):
+        notes = self.client_author.get(NOTES_LIST).context['object_list']
+        self.assertIn(self.note, notes)
+        self.assertEqual(list(notes).count(self.note), 1)
+        note = notes.get(id=self.note.id)
+        self.assertEqual(note.title, self.note.title)
+        self.assertEqual(note.text, self.note.text)
+        self.assertEqual(note.author, self.note.author)
+        self.assertEqual(note.slug, self.note.slug)
 
-    def test_note_passed_to_page_in_object_list(self):
-        """
-        Отдельная заметка передаётся на страницу со списком заметок в списке
-        object_list в словаре context.
-        В список заметок одного пользователя не попадают заметки другого
-        пользователя.
-        """
-        users_statuses = (
-            (self.user_client, True),
-            (self.author_user_client, False),
+    def test_notes_not_available_for_another_author(self):
+        self.assertNotIn(
+            self.note,
+            self.client_reader.get(NOTES_LIST).context['object_list']
         )
-        for user, note_list in users_statuses:
-            with self.subTest(user=user):
-                url = reverse('notes:list')
-                response = user.get(url)
-                object_list = response.context['object_list']
-                self.assertIs((self.note in object_list), note_list)
 
-    def test_forms_passed_to_create_and_edit_pages(self):
-        """На страницы создания и редактирования заметки передаются формы."""
-        urls = (
-            ('notes:add', None),
-            ('notes:edit', (self.note.slug,)),
-        )
-        for name, args in urls:
-            with self.subTest(name=name):
-                url = reverse(name, args=args)
-                response = self.user_client.get(url)
-                self.assertIn('form', response.context)
+    def test_form_include_page(self):
+        urls = (NOTES_ADD, NOTES_EDIT)
+        for url in urls:
+            with self.subTest(url=url):
+                context = self.client_author.get(url).context
+                self.assertIn('form', context)
+                self.assertIsInstance(context['form'], NoteForm)
