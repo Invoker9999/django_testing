@@ -58,11 +58,12 @@ class TestNoteCreation(BaseTestCase):
         self.assertEqual(set(Note.objects.all()), notes)
 
     def test_client_cant_edit_note_of_another_client(self):
+        note_before = Note.objects.count()
         response = self.client_reader.post(
             NOTES_EDIT,
             data=self.form_new_data
         )
-        self.assertEqual(Note.objects.count(), 0)
+        self.assertEqual(Note.objects.count(), note_before)
         self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
         note = Note.objects.get(id=self.note.id)
         self.assertEqual(note.title, self.note.title)
@@ -71,8 +72,9 @@ class TestNoteCreation(BaseTestCase):
         self.assertEqual(note.slug, self.note.slug)
 
     def test_client_cant_delete_note_of_another_client(self):
+        note_before = Note.objects.count()
         response = self.client_reader.delete(NOTES_DELETE)
-        self.assertEqual(Note.objects.count(), 0)
+        self.assertEqual(Note.objects.count(), note_before)
         self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
         self.assertTrue(Note.objects.filter(id=self.note.id).exists())
         note = Note.objects.get(id=self.note.id)

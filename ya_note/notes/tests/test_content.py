@@ -33,7 +33,8 @@ class TestListNotes(BaseTestCase):
         )
 
     def test_notes_one_author(self):
-        self.assertIn('object_list', self.client.get(self.client_author).context)
+        response = self.client_author.get(NOTES_LIST)
+        self.assertIn('object_list', response.context)
         notes = self.client_author.get(NOTES_LIST).context['object_list']
         self.assertIn(self.note, notes)
         self.assertEqual(list(notes).count(self.note), 1)
