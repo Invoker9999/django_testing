@@ -18,7 +18,7 @@ class TestNoteCreation(BaseTestCase):
     def base_check_create_note(self, form, expected_slug):
         notes = set(Note.objects.all())
         self.client_author.post(NOTES_ADD, data=form)
-        notes = set(Note.objects.all()) - notes
+        notes = set(Note.objects.all()).difference(notes)
         self.assertEqual(len(notes), 1)
         note = notes.pop()
         self.assertEqual(note.title, form['title'])
@@ -62,6 +62,7 @@ class TestNoteCreation(BaseTestCase):
             NOTES_EDIT,
             data=self.form_new_data
         )
+        self.assertEqual(Note.objects.count(), 0)
         self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
         note = Note.objects.get(id=self.note.id)
         self.assertEqual(note.title, self.note.title)
@@ -71,6 +72,7 @@ class TestNoteCreation(BaseTestCase):
 
     def test_client_cant_delete_note_of_another_client(self):
         response = self.client_reader.delete(NOTES_DELETE)
+        self.assertEqual(Note.objects.count(), 0)
         self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
         self.assertTrue(Note.objects.filter(id=self.note.id).exists())
         note = Note.objects.get(id=self.note.id)

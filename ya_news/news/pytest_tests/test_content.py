@@ -5,6 +5,9 @@ from news.forms import CommentForm
 
 def test_max_10_news_on_homepage(client, news_home_url, list_news):
     """Количество новостей на главной странице — не более 10."""
+    response = client.get(news_home_url)
+    object_list = response.context['object_list']
+    assert news_home_url in object_list
     assert (
         client.get(news_home_url).context['object_list'].count()
     ) == settings.NEWS_COUNT_ON_HOME_PAGE
@@ -15,8 +18,13 @@ def test_news_sorted_by_freshness(client, news_home_url, list_news):
     Новости отсортированы от самой свежей к самой старой.
     Свежие новости в начале списка.
     """
+    response = client.get(news_home_url)
+    object_list = response.context['object_list']
+    assert news_home_url in object_list
     all_dates = [
-        news.date for news in client.get(news_home_url).context['object_list']
+        news.date for news in (
+            client.get(news_home_url).context['object_list']
+        )
     ]
     assert all_dates == sorted(all_dates, reverse=True)
 
@@ -45,3 +53,5 @@ def test_authorized_client_has_form(client_reader, news_detail_url):
     context = client_reader.get(news_detail_url).context
     assert 'form' in context
     assert isinstance(context['form'], CommentForm)
+
+

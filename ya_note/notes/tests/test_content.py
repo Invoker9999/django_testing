@@ -1,5 +1,6 @@
-from notes.models import Note
 from notes.forms import NoteForm
+from notes.models import Note
+
 from .common import (
     BaseTestCase,
     NOTE_SLUG,
@@ -13,27 +14,26 @@ class TestListNotes(BaseTestCase):
 
     @classmethod
     def setUpTestData(cls):
-        BaseTestCase.setUpTestData()
+        super().setUpTestData()
         cls.notes = Note.objects.bulk_create(
-            [
-                Note(
-                    title=f'Заголовок {index}',
-                    text='Просто текст.',
-                    slug=NOTE_SLUG + f'{index}',
-                    author=cls.author,
-                )
-                if index % 2 == 1 else
-                Note(
-                    title=f'Заголовок {index}',
-                    text='Просто текст.',
-                    slug=NOTE_SLUG + f'{index}',
-                    author=cls.reader,
-                )
-                for index in range(4)
-            ]
+            Note(
+                title=f'Заголовок {index}',
+                text='Просто текст.',
+                slug=NOTE_SLUG + f'{index}',
+                author=cls.author,
+            )
+            if index % 2 == 1 else
+            Note(
+                title=f'Заголовок {index}',
+                text='Просто текст.',
+                slug=NOTE_SLUG + f'{index}',
+                author=cls.reader,
+            )
+            for index in range(4)
         )
 
     def test_notes_one_author(self):
+        self.assertIn('object_list', self.client.get(self.client_author).context)
         notes = self.client_author.get(NOTES_LIST).context['object_list']
         self.assertIn(self.note, notes)
         self.assertEqual(list(notes).count(self.note), 1)
