@@ -1,4 +1,5 @@
 from http import HTTPStatus
+
 import pytest
 
 from news.forms import BAD_WORDS, WARNING
@@ -49,7 +50,7 @@ def test_client_can_create_comment(client_reader,
     response = client_reader.post(news_detail_url, data=FORM_DATA)
     assert response.status_code == HTTPStatus.FOUND
     assert Comment.objects.count() == comments_before + 1
-    comment_new = Comment.objects.latest('id')
+    comment_new = Comment.objects.get('id')
     assert comment_new.text == FORM_DATA['text']
     assert comment_new.news == news
     assert comment_new.author == reader
@@ -66,7 +67,7 @@ def test_author_can_edit_own_comment(client_author,
         data=FORM_NEW_DATA
     ).status_code == HTTPStatus.FOUND
     assert Comment.objects.count() == comments_before
-    comment_edit = Comment.objects.latest('id')
+    comment_edit = Comment.objects.get('id')
     assert comment_edit.text == FORM_NEW_DATA['text']
     assert comment_edit.news == comment.news
     assert comment_edit.author == comment.author
@@ -81,7 +82,7 @@ def test_author_can_delete_own_comment(client_author,
         comment_delete_url
     ).status_code == HTTPStatus.FOUND
     assert Comment.objects.count() == comments_before - 1
-    assert Comment.objects.exists() == 0
+    assert Comment.objects.get('id').exists()
 
 
 def test_reader_cant_edit_authors_comment(client_reader,

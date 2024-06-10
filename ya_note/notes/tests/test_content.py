@@ -22,13 +22,6 @@ class TestListNotes(BaseTestCase):
                 slug=NOTE_SLUG + f'{index}',
                 author=cls.author,
             )
-            if index % 2 == 1 else
-            Note(
-                title=f'Заголовок {index}',
-                text='Просто текст.',
-                slug=NOTE_SLUG + f'{index}',
-                author=cls.reader,
-            )
             for index in range(4)
         )
 

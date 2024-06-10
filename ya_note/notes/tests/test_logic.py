@@ -2,8 +2,6 @@ from http import HTTPStatus
 
 from pytils.translit import slugify
 
-from notes.forms import WARNING
-from notes.models import Note
 from .common import (
     BaseTestCase,
     NOTES_ADD,
@@ -11,6 +9,8 @@ from .common import (
     NOTES_EDIT,
     NOTES_SUCCESS,
 )
+from notes.forms import WARNING
+from notes.models import Note
 
 
 class TestNoteCreation(BaseTestCase):
