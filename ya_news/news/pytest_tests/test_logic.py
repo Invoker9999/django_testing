@@ -51,6 +51,7 @@ def test_client_can_create_comment(client_reader,
     response = client_reader.post(news_detail_url, data=FORM_DATA)
     assert response.status_code == HTTPStatus.FOUND
     assert Comment.objects.count() == comments_before + 1
+    Comment.objects.all().delete
     comment_new = Comment.objects.get(id=reader_id)
     assert comment_new.text == FORM_DATA['text']
     assert comment_new.news == news
@@ -62,14 +63,12 @@ def test_author_can_edit_own_comment(client_author,
                                      comment):
     """Проверка на возможность редактирования комментария автору."""
     comments_before = Comment.objects.count()
-    comment_id = comment.id
-    assert Comment.objects.count() == comments_before
     assert client_author.post(
         comment_edit_url,
         data=FORM_NEW_DATA
     ).status_code == HTTPStatus.FOUND
     assert Comment.objects.count() == comments_before
-    comment_edit = Comment.objects.get(id=comment_id)
+    comment_edit = Comment.objects.get(id=comment.id)
     assert comment_edit.text == FORM_NEW_DATA['text']
     assert comment_edit.news == comment.news
     assert comment_edit.author == comment.author

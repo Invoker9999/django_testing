@@ -1,6 +1,3 @@
-from notes.forms import NoteForm
-from notes.models import Note
-
 from .common import (
     BaseTestCase,
     NOTE_SLUG,
@@ -8,6 +5,8 @@ from .common import (
     NOTES_EDIT,
     NOTES_LIST,
 )
+from notes.forms import NoteForm
+from notes.models import Note
 
 
 class TestListNotes(BaseTestCase):
